@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>INPLAYER +</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- GLOBAL VARIABLES & THEMES --- */
+        :root {
+            --bg-color: #f2f2f7; --card-bg: #ffffff; --text-main: #000000; --text-sec: #666666; --accent: #FF3B30;
+            --sidebar-bg: #ffffff; --nav-bg: rgba(255, 255, 255, 0.95); --border-color: rgba(0,0,0,0.15);
+            --search-bg: #e5e5ea; --search-txt: #000000;
+        }
+
+        body.dark-theme {
+            --bg-color: #050505; --card-bg: #141414; --text-main: #ffffff; --text-sec: #aaaaaa;
+            --sidebar-bg: #0f0f0f; --nav-bg: rgba(5, 5, 5, 0.95); --border-color: rgba(255,255,255,0.12);
+            --search-bg: #111111; --search-txt: #ffffff;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Outfit', sans-serif; margin: 0; padding: 0; overflow-x: hidden; user-select: none; transition: 0.3s; }
+        ::-webkit-scrollbar { display: none; }
+
+        /* FOCUS GLOW (TV REMOTE) */
+        @keyframes borderGlow {
+            0% { border-color: var(--accent); box-shadow: 0 0 5px var(--accent); }
+            50% { border-color: white; box-shadow: 0 0 15px var(--accent); }
+            100% { border-color: var(--accent); box-shadow: 0 0 5px var(--accent); }
+        }
+        .focusable:focus, .focusable.focused {
+            border: 2px solid var(--accent) !important;
+            animation: borderGlow 1.5s infinite;
+            transform: scale(1.05);
+            z-index: 100;
+        }
+/* --- FAVORITES INDICATOR (FIXED) --- */
+.fav-indicator {
+    position: absolute;
+    top: 8px; /* Pehle 10 tha, thoda upar kiya */
+    left: 8px; /* Pehle 10 tha, thoda side mein kiya */
+    z-index: 10; /* Z-index kam kiya taaki sidebar iske upar aaye */
+    display: none;
+    filter: none !important; /* Shadow poori tarah hata di */
+}
+
+/* Card par .fav class hone par heart dikhao */
+.card.fav .fav-indicator {
+    display: block !important;
+}
+
+/* Heart Icon Size: Slight small kiya */
+.fav-indicator svg {
+    width: 18px; /* Pehle 22px tha */
+    height: 18px;
+    fill: #FF3B30;
+}
+
+/* --- SIDEBAR FIX (TAAKI HEART NA DIKHE) --- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 280px;
+    height: 100%;
+    background: var(--card-bg); /* Use theme based color */
+    z-index: 1000; /* Isse heart icon hamesha peeche chupa rahega */
+    transition: 0.3s;
+    border-right: 1px solid var(--border-color);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5); /* Sidebar ki shadow rahegi sirf */
+}
+
+/* Sidebar jab khula ho tab saaf background rahe */
+.sidebar-overlay {
+    z-index: 999; /* Sidebar ke theek niche */
+}
+/* --- 1. NAV BAR (Sleek Alignment) --- */
+.nav-bar {
+    display: flex;
+    align-items: center;
+    /* Right side 35px space taaki last icon edge se chipka na rahe */
+    padding: 15px 35px 15px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    background: var(--nav-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* --- 2. HAMBURGER (Rounded Square Selection) --- */
+.hamburger {
+    font-size: 24px;
+    margin-right: 8px; /* Logo starts near here */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 12px;
+    padding: 5px;
+    transition: 0.3s;
+}
+.hamburger svg { fill: var(--text-main); width: 28px; height: 28px; }
+
+.hamburger:focus, .hamburger.focused {
+    border: 2px solid var(--accent) !important;
+    animation: borderGlow 1.5s infinite;
+    transform: scale(1.05);
+    outline: none;
+    border-radius: 12px !important;
+}
+
+/* --- 3. LOGO (Play Icon aur Text ke beech 0 gap) --- */
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0px; /* ✅ Play icon aur INPLAYER ke beech gap nahi hai */
+    cursor: pointer;
+}
+
+.red-play-icon {
+    width: 26px;
+    height: 26px;
+    fill: var(--accent);
+    margin-right: 2px; /* Halka sa touch adjustment */
+}
+
+.logo-text {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.logo-text span {
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 800;
+    margin-left: 1px;
+}
+
+/* --- 4. ICONS GROUPING (+ ke baad slight space logic) --- */
+.nav-icons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+    /* ✅ Yahan padding-left badhane se '+' ke baad slight space aayegi */
+    padding-left: 12px;
+}
+
+.icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+/* Icons Selection: Perfect Circle */
+.icon-btn:focus, .icon-btn.focused {
+    border: 2px solid var(--accent) !important;
+    animation: borderGlow 1.5s infinite;
+    transform: scale(1.1);
+    outline: none;
+    border-radius: 50% !important;
+}
+
+.icon-btn svg { width: 20px; fill: var(--text-main); }
+
+/* --- 5. SELECTION GLOW ANIMATION --- */
+@keyframes borderGlow {
+    0% { border-color: var(--accent); box-shadow: 0 0 5px var(--accent); }
+    50% { border-color: white; box-shadow: 0 0 15px var(--accent); }
+    100% { border-color: var(--accent); box-shadow: 0 0 5px var(--accent); }
+}
+
+/* --- 6. SIDEBAR --- */
+.sidebar {
+    position: fixed; top: 0; left: -300px; width: 280px; height: 100%;
+    background: var(--sidebar-bg); z-index: 2000;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid var(--border-color);
+}
+.sidebar-header {
+    padding: 30px 20px;
+    border-bottom: 1px solid var(--border-color); /* Line restored under logo */
+}
+
+
+        .nav-icons { display: flex; gap: 12px; align-items: center; }
+        .icon-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid transparent; }
+        .icon-btn svg { width: 20px; fill: var(--text-main); }
+
+        /* SIDEBAR */
+        .sidebar-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:98; opacity:0; pointer-events:none; transition:0.3s; backdrop-filter: blur(4px); }
+        .sidebar-overlay.open { opacity:1; pointer-events:auto; }
+        .sidebar { position: fixed; top:0; left:-300px; width:280px; height:100%; background: var(--sidebar-bg); z-index:99; transition:0.3s cubic-bezier(0.4, 0, 0.2, 1); border-right:1px solid var(--border-color); display: flex; flex-direction: column; }
+        .sidebar.open { left:0; }
+        .sidebar-header { padding: 30px 20px; border-bottom: 1px solid var(--border-color); }
+        .menu-list { padding: 15px; flex: 1; }
+        .menu-item { display: flex; gap: 18px; padding: 16px; color: var(--text-main); border-radius: 12px; cursor: pointer; font-weight: 700; margin-bottom: 8px; align-items: center; font-size: 18px; border: 2px solid transparent; }
+        .menu-item svg { width: 24px; fill: #888; }
+        .menu-item:focus svg, .menu-item.focused svg, .menu-item:hover svg { fill: var(--accent); }
+
+        /* SEARCH BAR */
+        #search-box { display:none; padding:20px; }
+        .search-wrapper { display: flex; align-items: center; background: var(--search-bg); border-radius: 50px; border: 1px solid var(--border-color); padding: 4px 10px 4px 20px; }
+        #search-input { flex: 1; padding: 12px 0; border: none; background: transparent; font-size: 16px; color: var(--search-txt); font-weight: 800; outline: none; }
+        .voice-btn { cursor: pointer; background: rgba(255, 59, 48, 0.1); border: 1px solid rgba(255, 59, 48, 0.4); display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; box-shadow: 0 0 10px rgba(255, 59, 48, 0.2); }
+        .voice-btn svg { width: 22px; fill: var(--accent); }
+
+        /* GRID SYSTEM */
+        #content-area { padding: 15px; padding-bottom: 80px; }
+        .cat-title { font-size: 17px; font-weight: 800; margin: 25px 0 15px 5px; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .cat-title::before { content: ''; width: 4px; height: 18px; background: var(--accent); border-radius: 2px; }
+        .grid { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+        @media(min-width: 600px) { .grid { grid-template-columns: repeat(5, 1fr); gap: 15px; } }
+
+        /* CARDS */
+        .card { background: var(--card-bg); border-radius: 12px; aspect-ratio: 1/1.05; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; }
+
+        /* --- MOVIE BANNER STYLE (Top Section) --- */
+.hero-banner {
+    width: 100%;
+    padding: 10px 5px;
+    margin-bottom: 10px;
+}
+
+.card.banner-card {
+    width: 100% !important;
+    /* Aspect Ratio को 16/9 किया ताकि image कटे नहीं */
+    aspect-ratio: 16 / 9 !important;
+    position: relative !important;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    display: flex;
+    background: #000; /* खाली जगह होने पर black दिखेगा */
+}
+
+.banner-img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    /* 100% 100% से इमेज पूरी फिट आएगी, कटेगी नहीं */
+    object-fit: 100% 100% !important;
+    z-index: 1;
+}
+
+/* Banner Overlay: बिल्कुल नीचे (End) में */
+.banner-overlay {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0;
+    width: 100%;
+    z-index: 2;
+    /* Smooth Bottom Gradient */
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 60%, transparent 100%) !important;
+    padding: 35px 20px 15px 20px !important;
+    text-align: left;
+    pointer-events: none;
+}
+
+.banner-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: white;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.banner-badge {
+    position: absolute;
+    top: 15px; right: 15px;
+    background: #FF3B30;
+    color: white;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 6px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* --- MOVIE CARDS (पहिले जैसे ही रहेंगे) --- */
+.card.movie-card {
+    position: relative !important;
+    aspect-ratio: 2/3 !important;
+    background: #141414;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.card.movie-card .card-logo {
+    position: absolute !important;
+    top: 0; left: 0;
+    width: 100% !important; height: 100% !important;
+    object-fit: cover !important;
+    z-index: 1;
+}
+
+.card.movie-card .quality-tag {
+    position: absolute !important;
+    top: 10px; right: 10px;
+    background: #FF3B30 !important;
+    color: white !important;
+    padding: 3px 8px !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    border-radius: 4px;
+    z-index: 10;
+}
+
+.card.movie-card .card-name {
+    position: absolute !important;
+    bottom: 0; left: 0;
+    width: 100% !important;
+    z-index: 5;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8) 40%, rgba(0,0,0,1)) !important;
+    color: #ffffff !important;
+    padding: 20px 5px 10px 5px !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-align: center;
+}
+
+.card.movie-card .card-logo {
+    position: absolute !important;
+    top: 0; left: 0;
+    width: 100% !important; height: 100% !important;
+    object-fit: cover !important;
+    z-index: 1;
+}
+
+.card.movie-card .quality-tag {
+    position: absolute !important;
+    top: 10px; right: 10px;
+    background: #FF3B30 !important;
+    color: white !important;
+    padding: 3px 8px !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    border-radius: 4px;
+    z-index: 10;
+}
+
+.card.movie-card .card-name {
+    position: absolute !important;
+    bottom: 0; left: 0;
+    width: 100% !important;
+    z-index: 5;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8) 40%, rgba(0,0,0,1)) !important;
+    color: #ffffff !important;
+    padding: 20px 5px 10px 5px !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-align: center;
+}
+
+/* Click Fix */
+.card-logo, .card-name, .quality-tag, .banner-overlay {
+    pointer-events: none;
+}
+/* --- PROFESSIONAL SERIES MODAL --- */
+/* --- SERIES MODAL UI (THEME ADAPTABLE) --- */
+#series-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-color); z-index: 10005; display: none;
+    overflow-y: auto;
+    padding: 50px 20px 20px 20px; /* Header ko thoda aur niche kiya */
+    color: var(--text-main);
+    -webkit-tap-highlight-color: transparent; /* Mobile touch highlight remove kiya */
+}
+
+/* Header Section */
+.modal-header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+.title-stack { display: flex; flex-direction: column; gap: 0px; }
+.series-title-row { display: flex; align-items: center; gap: 12px; }
+.series-bullet { width: 6px; height: 32px; background: var(--accent); border-radius: 10px; }
+.series-name-txt { font-size: 32px; font-weight: 900; line-height: 1.1; color: var(--text-main); }
+.series-meta-txt { color: var(--accent); font-weight: 700; font-size: 15px; margin-left: 18px; margin-top: -2px; }
+
+/* Professional Close Button */
+.close-series-btn {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; cursor: pointer; color: var(--text-main);
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    transition: 0.3s;
+}
+.close-series-btn:focus, .close-series-btn.focused {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    box-shadow: 0 0 20px var(--accent);
+    outline: none;
+}
+
+/* --- PROFESSIONAL EPISODE CARD (CLEAN & GLOW) --- */
+.ep-item {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 15px;
+    /* ✅ Card background theme ke hisab se rahega */
+    background: var(--card-bg) !important;
+    padding: 15px;
+    min-height: 115px;
+    border-radius: 20px;
+
+    /* ✅ Black Border hatakar Professional Black Shadow lagayi hai */
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
+    position: relative;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+}
+
+/* ✅ SELECT / FOCUS STATE: NO RED TINT, ONLY RED OUTER GLOW 🔥 */
+.ep-item:focus, .ep-item.focused, .ep-item:active {
+    /* Background hamesha vahi rahega jo theme ka hai (White ya Black) */
+    background: var(--card-bg) !important;
+
+    /* Bahar ki taraf ek perfect Red Border */
+    outline: 3px solid var(--accent) !important;
+    outline-offset: -3px; /* Border ko card ke kinare par set karne ke liye */
+
+    /* 🔥 PURE RED NEON OUTER GLOW */
+    box-shadow: 0 0 35px 8px rgba(255, 59, 48, 0.5) !important;
+
+    transform: scale(1.03);
+    z-index: 10;
+}
+
+/* Metadata aur Thumbnail Fix */
+.ep-thumb-box {
+    width: 145px;
+    aspect-ratio: 16/9;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.ep-thumb-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ep-info-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Dark Theme mein shadow thodi aur dense dikhegi */
+body.dark-theme .ep-item {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+}
+
+/* Text Click Blocking Fix */
+.ep-thumb-box, .ep-info-box, .ep-meta-tag, .ep-title-txt, .ep-desc-txt {
+    pointer-events: none !important;
+}
+
+.ep-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.ep-item {
+    display: flex; gap: 15px; margin-bottom: 20px; background: #161618;
+    padding: 10px; border-radius: 12px; cursor: pointer; border: 1px solid #333;
+}
+.ep-thumb { width: 140px; aspect-ratio: 16/9; border-radius: 8px; object-fit: cover; }
+.ep-info { flex: 1; }
+.ep-info h3 { font-size: 16px; margin-bottom: 4px; }
+.ep-info p { font-size: 12px; color: #aaa; line-height: 1.4; }
+.ep-meta { font-size: 11px; color: var(--accent); font-weight: 800; margin-bottom: 5px; }
+
+/* Series Title with Red Bullet */
+.series-title-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 5px; }
+.series-bullet { width: 5px; height: 28px; background: var(--accent); border-radius: 10px; }
+
+/* Premium Dropdown Styling */
+#season-select {
+    width: 100%; padding: 14px; background: var(--card-bg);
+    color: var(--text-main); border: 1px solid var(--border-color);
+    border-radius: 12px; font-weight: 800; margin-bottom: 20px;
+    outline: none; cursor: pointer; font-size: 16px;
+}
+
+/* TV Focus: Red Border on Episodes */
+.ep-item:focus, .ep-item.focused {
+    border: 2px solid var(--accent) !important;
+    background: rgba(255, 59, 48, 0.05) !important;
+    transform: scale(1.02);
+    outline: none;
+}
+
+/* --- FULL WIDTH SLIDER (ONE AT A TIME) --- */
+.slider-container {
+    width: 100%;
+    position: relative;
+    margin-bottom: 20px;
+    padding: 0;
+    overflow: hidden; /* Agla card bilkul nahi dikhega */
+    touch-action: pan-y; /* Horizontal swipe smooth karne ke liye */
+}
+
+.slider-wrapper {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    width: 100%;
+}
+
+.slide {
+    min-width: 100%; /* Ek slide poori jagah legi */
+    width: 100%;
+    padding: 10px; /* Side mein halka gap frame ke liye */
+    box-sizing: border-box;
+}
+
+.slide-inner {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 16 / 9;
+    position: relative;
+    border-radius: 25px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: #000;
+}
+
+.slide-inner img {
+    width: 100%;
+    height: 100%;
+    object-fit: ; /* Aspect ratio maintain karne ke liye cover best hai */
+}
+
+/* Overlay and Tags */
+.slide-overlay {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    padding: 20px;
+    pointer-events: none;
+}
+
+.slide-title { font-size: 20px; font-weight: 800; color: white; }
+.slide-badge {
+    position: absolute; top: 15px; right: 20px;
+    background: #FF3B30; color: white; font-size: 10px; font-weight: 900;
+    padding: 4px 12px; border-radius: 8px;
+}
+
+/* Professional Dots */
+.slider-dots { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+.dot { width: 8px; height: 8px; background: rgba(128,128,128,0.3); border-radius: 50%; transition: 0.4s; }
+.dot.active { background: var(--accent); width: 22px; border-radius: 10px; }
+/* Dots */
+.slider-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+.dot { width: 8px; height: 8px; background: rgba(128,128,128,0.4); border-radius: 50%; transition: 0.3s; }
+.dot.active { background: var(--accent); width: 20px; border-radius: 10px; }
+
+.dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(128, 128, 128, 0.5);
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.dot.active {
+    background: var(--accent);
+    width: 20px;
+    border-radius: 10px;
+}
+
+@media(max-width: 600px) {
+    .slide { aspect-ratio: 16 / 9; }
+    .slide-title { font-size: 18px; }
+}
+        .card-logo { width: 70%; height: 50%; object-fit: contain; z-index: 2; pointer-events: none; }
+        .card-name { font-size: 11px; margin-top: 10px; color: var(--text-sec); font-weight: 800; text-align: center; width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+        .live-tag { position: absolute; top: 8px; right: 8px; background: #FF3B30; color: white; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 800; z-index: 2; }
+        .quality-tag { position: absolute; top: 8px; right: 8px; background: ##FF3B30; color: white; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 800; z-index: 2; }
+
+
+
+        /* ABOUT MODAL */
+        .about-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(12px); background: rgba(0,0,0,0.8); }
+        .about-modal.show { opacity: 1; pointer-events: auto; }
+        .about-card { width: 90%; max-width: 350px; border-radius: 28px; padding: 40px 25px; text-align: center; display: flex; flex-direction: column; align-items: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .close-btn { background: var(--accent); color: white; border: none; padding: 12px 40px; border-radius: 30px; font-weight: 700; cursor: pointer; margin-top: 25px; border: 2px solid transparent; }
+    </style>
+</head>
+<body>
+
+<!-- NAV BAR -->
+<div class="nav-bar">
+    <div class="hamburger focusable" tabindex="0" onclick="toggleSidebar()" id="hamburger-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </div>
+    <div class="logo-wrapper" onclick="loadChannels(); resetToHome();">
+        <svg class="red-play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <div class="logo-text">INPLAYER <span>+</span></div>
+    </div>
+    <div class="nav-icons">
+        <div class="icon-btn focusable" tabindex="0" onclick="toggleSearch()" id="search-btn-nav"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div>
+        <div class="icon-btn focusable" tabindex="0" onclick="showFavorites()" id="fav-btn-nav"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+        <div class="icon-btn focusable" tabindex="0" onclick="toggleTheme()" id="theme-btn-nav">
+            <svg viewBox="0 0 24 24" id="theme-icon" width="22" height="22" fill="currentColor"></svg>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sb-overlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo-wrapper" style="pointer-events:none;">
+            <svg class="red-play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <div class="logo-text">INPLAYER +</div>
+        </div>
+    </div>
+    <div class="menu-list">
+        <div class="menu-item focusable" tabindex="0" onclick="resetToHome(); toggleSidebar()"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style="margin-right:15px;"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Home</div>
+        <div class="menu-item focusable" tabindex="0" onclick="fetchMovies(); toggleSidebar()"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style="margin-right:15px;"><path d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/></svg> Movies & Series</div>
+        <div class="menu-item focusable" tabindex="0" onclick="showAllFlat(); toggleSidebar()"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style="margin-right:15px;"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg> All Channels</div>
+        <div class="menu-item focusable" tabindex="0" onclick="showFavorites(); toggleSidebar()"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style="margin-right:15px;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Favorites</div>
+        <div class="menu-item focusable" tabindex="0" onclick="toggleAbout(); toggleSidebar()"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style="margin-right:15px;"><path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/></svg> About</div>
+    </div>
+</div>
+
+<!-- SEARCH BAR -->
+<div id="search-box">
+    <div class="search-wrapper">
+        <input type="text" id="search-input" placeholder="Search..." oninput="doSearch()" class="focusable" tabindex="0">
+        <div class="voice-btn focusable" tabindex="0" onclick="startVoiceSearch()" id="voice-trigger"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.66 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></div>
+    </div>
+</div>
+
+<div id="content-area"></div>
+
+<!-- ABOUT MODAL -->
+<div class="about-modal" id="about-modal">
+    <div class="about-card" style="background: var(--card-bg); color: var(--text-main);">
+        <div class="logo-wrapper" style="justify-content:center; margin-bottom:15px; pointer-events:none;">
+            <svg class="red-play-icon" viewBox="0 0 24 24" width="60" height="60"><path fill="#FF3B30" d="M8 5v14l11-7z"/></svg>
+            <div style="font-size:32px; font-weight:800; color: var(--text-main);">INPLAYER <span style="color: var(--accent);">+</span></div>
+        </div>
+        <div style="color: var(--accent); font-size:13px; font-weight:800; margin-bottom:25px; letter-spacing:2px; text-transform: uppercase; opacity: 0.9;">Platinum Edition v8.0</div>
+        <div style="text-align: left; margin: 0 auto 30px auto; width: fit-content; display: flex; flex-direction: column; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 12px; color: var(--text-main); font-size: 15px; font-weight: 500;">
+                <div style="background: rgba(255, 59, 48, 0.1); padding: 6px; border-radius: 8px; display: flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div> Experience High Speed Stream
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; color: var(--text-main); font-size: 15px; font-weight: 500;">
+                <div style="background: rgba(255, 59, 48, 0.1); padding: 6px; border-radius: 8px; display: flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div> Ultra HD Quality Supported
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; color: var(--text-main); font-size: 15px; font-weight: 500;">
+                <div style="background: rgba(255, 59, 48, 0.1); padding: 6px; border-radius: 8px; display: flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div> Lifetime Access
+            </div>
+        </div>
+        <div style="padding-top: 20px; border-top: 1px solid var(--border-color); width: 100%;">
+            <div style="color: var(--text-sec); font-size: 13px; margin-bottom: 5px;">Designed & Developed by</div>
+            <div style="font-weight: 800; color: var(--text-main); font-size: 22px; letter-spacing: 0.5px;">Yash Nemade</div>
+        </div>
+        <button class="close-btn focusable" tabindex="0" onclick="toggleAbout()" style="width: 100%; margin-top: 30px;">CLOSE</button>
+    </div>
+</div>
+
+<script>
+    let channels = [], movies = [], currentUrl = "", favs = JSON.parse(localStorage.getItem('favs')) || [];
+        const area = document.getElementById('content-area');
+
+        // Helper function taaki har baar fresh URL mile
+        const getFreshUrl = (baseUrl) => `${baseUrl}?t=${new Date().getTime()}`;
+
+        // LIVE TV FETCH (Auto-load on startup)
+        function loadChannels() {
+            const freshChannelsUrl = getFreshUrl("https://api.npoint.io/85fbd5b6462f28618069");
+
+            fetch(freshChannelsUrl, { cache: "no-store" }) // Strictly bypass cache
+                .then(r => r.json())
+                .then(data => {
+                    channels = Array.isArray(data) ? data : [];
+                    renderChannels(channels);
+                })
+                .catch(e => console.error("Channels Fetch Error:", e));
+        }
+
+        // Startup call
+        loadChannels();
+
+        // MOVIES FETCH FUNCTION
+        function fetchMovies() {
+            area.innerHTML = "<div class='cat-title'>Loading Movies & Series...</div>";
+            document.getElementById('search-box').style.display = 'none';
+
+            const freshMoviesUrl = getFreshUrl("https://api.npoint.io/56fc751c2191cd12b672");
+
+            fetch(freshMoviesUrl, { cache: "no-store" }) // Strictly bypass cache
+                .then(r => {
+                    if (!r.ok) throw new Error("Network error");
+                    return r.json();
+                })
+                .then(data => {
+                    console.log("Real-time Movies received:", data);
+                    movies = Array.isArray(data) ? data : [];
+
+                    if (movies.length === 0) {
+                        area.innerHTML = "<p style='padding:20px; color:var(--text-sec);'>No movies found in JSON database.</p>";
+                        return;
+                    }
+                    renderMovies(movies);
+                })
+                .catch(e => {
+                    console.error("Movies Fetch Error:", e);
+                    area.innerHTML = "<p style='padding:20px; color:var(--accent);'>Failed to load movies. Please check your JSON link.</p>";
+                });
+        }
+
+        function renderChannels(list) {
+            area.innerHTML = "";
+            if(!list || list.length === 0) return;
+
+            const cats = {};
+            list.forEach(c => {
+                const category = c.cat || "Other";
+                if(!cats[category]) cats[category]=[];
+                cats[category].push(c);
+            });
+
+            for(let k in cats) {
+                const t = document.createElement('div'); t.className = 'cat-title'; t.innerText = k; area.appendChild(t);
+                const g = document.createElement('div'); g.className = 'grid';
+                cats[k].forEach(ch => createCard(ch, g, false));
+                area.appendChild(g);
+            }
+        }
+
+        let movieSliderInterval; // Slider timer store karne ke liye
+
+let currentSlide = 0;
+let totalSlides = 0;
+let sliderInterval;
+let startX = 0;
+
+function renderMovies(list) {
+    area.innerHTML = "";
+    // Sirf un movies ko slider mein lo jinki category khali hai
+    const sliderItems = list.filter(m => !m.cat || m.cat.trim() === "").slice(0, 5);
+    totalSlides = sliderItems.length;
+
+    if (totalSlides > 0) {
+        const container = document.createElement('div');
+        container.className = 'slider-container';
+        container.id = 'mainSliderContainer';
+
+        let slidesHtml = '';
+        let dotsHtml = '';
+
+        sliderItems.forEach((m, index) => {
+            // 🔥 JSON se quality uthayega, agar nahi hai toh default "HD" dikhayega
+            const qTag = m.quality || "HD";
+
+            slidesHtml += `
+                <div class="slide" onclick='openPlayer(${JSON.stringify(m)})'>
+                    <div class="slide-inner focusable" tabindex="0">
+                        <div class="slide-badge">${qTag}</div>
+                        <img src="${m.logo}" onerror="this.src='https://via.placeholder.com/800x450'">
+                        <div class="slide-overlay">
+                            <div class="slide-title">${m.name}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            dotsHtml += `<div class="dot ${index === 0 ? 'active' : ''}"></div>`;
+        });
+
+        container.innerHTML = `
+            <div class="slider-wrapper" id="movieSliderWrapper">${slidesHtml}</div>
+            <div class="slider-dots">${dotsHtml}</div>
+        `;
+        area.appendChild(container);
+
+        // --- SWIPE / TOUCH LOGIC ---
+        container.addEventListener('touchstart', (e) => startX = e.touches[0].clientX);
+        container.addEventListener('touchend', (e) => {
+            let endX = e.changedTouches[0].clientX;
+            if (startX - endX > 50) moveSlider(1); // Swipe Left -> Next
+            if (startX - endX < -50) moveSlider(-1); // Swipe Right -> Prev
+        });
+
+        startAutoSlide();
+    }
+
+    // --- GRID LOGIC --- (Baaki grid render karne ka function)
+    renderRemainingGrid(list);
+}
+function moveSlider(direction) {
+    currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+    updateSliderUI();
+    startAutoSlide(); // Reset timer on manual move
+}
+
+function updateSliderUI() {
+    const wrapper = document.getElementById('movieSliderWrapper');
+    const dots = document.querySelectorAll('.dot');
+    if (wrapper) {
+        wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+        dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+    }
+}
+
+function startAutoSlide() {
+    if (sliderInterval) clearInterval(sliderInterval);
+    sliderInterval = setInterval(() => {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        updateSliderUI();
+    }, 5000);
+}
+
+function renderRemainingGrid(list) {
+    const gridItems = list.filter(m => m.cat && m.cat.trim() !== "");
+    const categories = {};
+    gridItems.forEach(m => {
+        if (!categories[m.cat]) categories[m.cat] = [];
+        categories[m.cat].push(m);
+    });
+    for (let cat in categories) {
+        const t = document.createElement('div');
+        t.className = 'cat-title'; t.innerText = cat;
+        area.appendChild(t);
+        const g = document.createElement('div');
+        g.className = 'grid';
+        categories[cat].forEach(mv => createCard(mv, g, true));
+        area.appendChild(g);
+    }
+}
+
+// SLIDER ANIMATION FUNCTION
+function setupMovieSlider(total) {
+    let current = 0;
+    const wrapper = document.getElementById('movieSliderWrapper');
+    const dots = document.querySelectorAll('.dot');
+
+    if (movieSliderInterval) clearInterval(movieSliderInterval);
+
+    movieSliderInterval = setInterval(() => {
+        current = (current + 1) % total;
+
+        if (wrapper) {
+            wrapper.style.transform = `translateX(-${current * 100}%)`;
+            dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        }
+    }, 5000); // Har 5 second mein slide hoga
+}
+function createCard(item, parentGrid, isMovie) {
+    const el = document.createElement('div');
+
+    const savedFavs = JSON.parse(localStorage.getItem('favs')) || [];
+    const isFav = savedFavs.includes(item.name);
+
+    // ✅ Badlav: 'fav' class sirf Live TV (not isMovie) ke liye hi apply hogi
+    const favClass = (isFav && !isMovie) ? 'fav' : '';
+    el.className = `card focusable ${isMovie ? 'movie-card' : ''} ${favClass}`;
+    el.tabIndex = 0;
+
+    let movieQuality = item.quality || "HD";
+    let tag = isMovie ? `<div class="quality-tag">${movieQuality}</div>` : `<div class="live-tag">LIVE</div>`;
+
+    // ✅ Badlav: Heart Icon ka HTML sirf Live TV ke liye add hoga
+    let heartHtml = "";
+    if (!isMovie) {
+        heartHtml = `
+            <div class="fav-indicator">
+                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>`;
+    }
+
+    el.innerHTML = `
+        ${tag}
+        ${heartHtml}
+        <img src="${item.logo}" class="card-logo" onerror="this.src='https://via.placeholder.com/200x300?text=TV'">
+        <div class="card-name">${item.name}</div>
+    `;
+
+    // --- LONG PRESS HANDLER ---
+    let pressTimer;
+    let longPressed = false;
+
+    const startPress = (e) => {
+        // ✅ Badlav: Agar movie hai toh yahan se return ho jao, long press kaam nahi karega
+        if (isMovie) return;
+
+        longPressed = false;
+        pressTimer = setTimeout(() => {
+            toggleFav(item.name, el);
+            longPressed = true;
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, 800);
+    };
+
+    const cancelPress = () => clearTimeout(pressTimer);
+
+    el.onmousedown = el.ontouchstart = startPress;
+    el.onmouseup = el.ontouchend = el.onmouseleave = cancelPress;
+
+    el.onclick = (e) => {
+        if (!longPressed) openPlayer(item);
+    };
+
+    parentGrid.appendChild(el);
+}
+
+    // --- PLAYER TRIGGER FUNCTION ---
+    function openPlayer(item) {
+    // 1. Safe Check: Kya item valid hai?
+    if (!item) return;
+
+    // 2. Web Series Check (Case Insensitive)
+    const category = item.cat ? item.cat.toLowerCase() : "";
+    if (category === "web series" || category === "series") {
+        if (item.episodes && item.episodes.length > 0) {
+            showWebSeriesModal(item);
+            return;
+        }
+    }
+
+    // 3. Purana Logic (Movies/Live TV): Jo pehle se hai
+    if (!item.url) {
+        alert("Link not available!");
+        return;
+    }
+
+    const url1 = item.url;
+    const name = item.name;
+    const url2 = item.url2 || "";
+
+    if (window.AndroidPortal && window.AndroidPortal.launchNative) {
+        window.AndroidPortal.launchNative(url1, name, url2);
+    } else {
+        console.log("Playing:", name, url1);
+        alert("Opening Player: " + name);
+    }
+}
+
+
+let currentOpenSeries = null;
+
+window.currentSeriesData = null; // Global reference
+
+function openPlayer(item) {
+    if (!item) return;
+    const category = (item.cat || "").toLowerCase().trim();
+
+    // 1. Web Series Modal logic
+    if (category === "web series" || category === "series") {
+        if ((item.seasons && item.seasons.length > 0) || (item.episodes && item.episodes.length > 0)) {
+            showWebSeriesModal(item);
+            return;
+        }
+    }
+
+    // 2. Movie/Live TV logic
+    if (!item.url) { alert("Link not available!"); return; }
+    if (window.AndroidPortal && window.AndroidPortal.launchNative) {
+        window.AndroidPortal.launchNative(String(item.url), String(item.name), String(item.url2 || ""), String(item.cat || "Live"));
+    }
+}
+
+function showWebSeriesModal(item) {
+    window.currentSeriesData = item; // ✅ Global data save kiya
+    const modal = document.getElementById('series-modal');
+    const container = document.getElementById('episodes-list-container');
+    const seasonSelect = document.getElementById('season-select');
+
+    document.getElementById('series-title-display').innerText = item.name;
+    document.getElementById('series-meta').innerText = `${item.genre || ''} • ${item.year || ''}`;
+
+    modal.style.display = 'block';
+
+    // Handle Seasons
+    if (item.seasons && item.seasons.length > 0) {
+        seasonSelect.style.display = "block";
+        seasonSelect.innerHTML = "";
+        item.seasons.forEach((s, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.innerText = s.season_name;
+            seasonSelect.appendChild(opt);
+        });
+        renderEpisodesList(item.seasons[0].episodes);
+    } else if (item.episodes) {
+        seasonSelect.style.display = "none";
+        renderEpisodesList(item.episodes);
+    }
+}
+
+function renderEpisodesList(eps) {
+    const container = document.getElementById('episodes-list-container');
+    container.innerHTML = ""; // List clear karein
+
+    if (!eps || eps.length === 0) {
+        container.innerHTML = "<p style='padding:20px; color:gray;'>No episodes found.</p>";
+        return;
+    }
+
+    eps.forEach((ep, index) => {
+        const nextUrl = eps[index + 1] ? eps[index + 1].url : "";
+        const div = document.createElement('div');
+        div.className = "ep-item focusable";
+        div.tabIndex = 0;
+
+        div.innerHTML = `
+            <div class="ep-thumb-box">
+                <img src="${ep.thumb || window.currentSeriesData.logo}" onerror="this.src='https://via.placeholder.com/150x84'">
+            </div>
+            <div class="ep-info-box">
+                <div style="font-size: 11px; color: var(--accent); font-weight: 800;">${ep.ep_num || 'E'+(index+1)} • ${ep.duration || ''}</div>
+                <div style="font-size: 17px; font-weight: 700; color: var(--text-main);">${ep.title || 'Episode '+(index+1)}</div>
+                <div style="font-size: 12px; color: var(--text-sec); line-height: 1.4; margin-top: 5px;">${ep.desc || ''}</div>
+            </div>`;
+
+        div.onclick = function() {
+            if (window.AndroidPortal && window.AndroidPortal.launchNative) {
+                window.AndroidPortal.launchNative(String(ep.url), String(ep.title), String(nextUrl), "Web Series");
+            }
+        };
+        container.appendChild(div);
+    });
+}
+
+function changeSeason() {
+    const idx = document.getElementById('season-select').value;
+    if (window.currentSeriesData && window.currentSeriesData.seasons[idx]) {
+        renderEpisodesList(window.currentSeriesData.seasons[idx].episodes);
+    }
+}
+
+function closeSeries() {
+    document.getElementById('series-modal').style.display = 'none';
+}
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('open');
+            document.getElementById('sb-overlay').style.display = sb.classList.contains('open') ? 'block' : 'none';
+            if(sb.classList.contains('open')) {
+                sb.querySelector('.menu-item').focus(); // Sidebar open hote hi focus pehle item par
+            }
+        }
+
+        // --- BACK BUTTON LOGIC ---
+        function handleBackAction() {
+            const sidebar = document.getElementById('sidebar');
+            const searchBox = document.getElementById('search-box');
+            const aboutModal = document.getElementById('about-modal');
+
+            if (sidebar.classList.contains('open')) {
+                toggleSidebar();
+            } else if (aboutModal.classList.contains('show')) {
+                toggleAbout();
+            } else if (searchBox.style.display === 'block') {
+                resetToHome();
+            } else {
+                // Agar sab band hai aur home par hain to app exit karein
+                if (window.AndroidPortal && window.AndroidPortal.exitApp) {
+                    window.AndroidPortal.exitApp();
+                } else {
+                    console.log("Exit App Triggered");
+                }
+            }
+        }
+
+        // Remote/Keypad Back Button Listener
+        window.addEventListener('keydown', (e) => {
+            if (e.keyCode === 8 || e.keyCode === 27 || e.keyCode === 4) { // Backspace, Esc, ya Android Back
+                if (document.activeElement.id === 'search-input' && document.activeElement.value !== "") return; // Let user delete text
+                e.preventDefault();
+                handleBackAction();
+            }
+
+            // --- SIDEBAR FOCUS RESTRICTION ---
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('open')) {
+                const menuItems = sidebar.querySelectorAll('.menu-item');
+                const current = document.activeElement;
+                const index = Array.from(menuItems).indexOf(current);
+
+                if (e.key === "ArrowDown" && index === menuItems.length - 1) {
+                    e.preventDefault(); // Sabse neeche ruk jao
+                }
+                if (e.key === "ArrowUp" && index === 0) {
+                    e.preventDefault(); // Sabse upar ruk jao
+                }
+                if (e.key === "ArrowRight") {
+                    e.preventDefault(); // Sidebar ke bahar mat jao jab tak open hai
+                }
+            }
+        });
+
+        // Android Hardware Back Button Hook
+        window.onBackPressed = handleBackAction;
+
+function toggleFav(name, el) {
+    // 1. LocalStorage se current list nikalna
+    let currentFavs = JSON.parse(localStorage.getItem('favs')) || [];
+
+    if (currentFavs.includes(name)) {
+        // 2. Agar pehle se hai toh remove karo
+        currentFavs = currentFavs.filter(n => n !== name);
+        if (el) el.classList.remove('fav'); // Heart hatayega
+    } else {
+        // 3. Agar nahi hai toh add karo
+        currentFavs.push(name);
+        if (el) el.classList.add('fav'); // Heart dikhayega
+    }
+
+    // 4. Data save aur global variable update
+    localStorage.setItem('favs', JSON.stringify(currentFavs));
+    favs = currentFavs;
+
+    // 5. Agar user "Favorites" wale page par hai, toh bina animation ke list refresh karo
+    const currentTitle = document.querySelector('.cat-title');
+    if (currentTitle && currentTitle.innerText === 'Favorites') {
+        showFavorites();
+    }
+}
+        function toggleAbout() { document.getElementById('about-modal').classList.toggle('show'); }
+
+        function resetToHome() {
+            document.getElementById('search-box').style.display = 'none';
+            renderChannels(channels);
+        }
+
+        function showAllFlat() {
+            document.getElementById('search-box').style.display = 'none';
+            area.innerHTML = "<div class='cat-title'>All Channels</div><div class='grid' id='flat-grid'></div>";
+            channels.forEach(ch => createCard(ch, document.getElementById('flat-grid'), false));
+        }
+
+        // ✅ FIXED: Search click karne par saara purana data (Favorites text) saaf ho jayega
+        function toggleSearch() {
+            const b = document.getElementById('search-box');
+            const isOpening = (b.style.display === 'none' || b.style.display === '');
+
+            if (isOpening) {
+                b.style.display = 'block';
+                // Screen saaf karke seedha saare channels aur movies dikhao
+                area.innerHTML = "<div class='cat-title'>All Content</div><div class='grid' id='res-grid'></div>";
+                const grid = document.getElementById('res-grid');
+                channels.forEach(ch => createCard(ch, grid, false));
+                movies.forEach(mv => createCard(mv, grid, true));
+
+                document.getElementById('search-input').value = "";
+                document.getElementById('search-input').focus();
+            } else {
+                resetToHome();
+            }
+        }
+
+        function showFavorites() {
+            document.getElementById('search-box').style.display = 'none';
+            const list = channels.filter(c => favs.includes(c.name));
+            area.innerHTML = "<div class='cat-title'>Favorites</div>";
+            if(list.length === 0) {
+                area.innerHTML += "<p style='padding:20px; color:var(--text-sec);'>Long press channel to add</p>";
+            } else {
+                const g = document.createElement('div');
+                g.className = 'grid';
+                list.forEach(ch => createCard(ch, g, false));
+                area.appendChild(g);
+            }
+        }
+
+        // ✅ FIXED: Live typing filter
+        function doSearch() {
+            const v = document.getElementById('search-input').value.toLowerCase();
+            area.innerHTML = "<div class='cat-title'>Results</div><div class='grid' id='res-grid'></div>";
+            const grid = document.getElementById('res-grid');
+
+            if (v.trim() === "") {
+                channels.forEach(ch => createCard(ch, grid, false));
+                movies.forEach(mv => createCard(mv, grid, true));
+                return;
+            }
+
+            channels.filter(c => (c.name || "").toLowerCase().includes(v)).forEach(ch => createCard(ch, grid, false));
+            movies.filter(m => (m.name || "").toLowerCase().includes(v)).forEach(m => createCard(m, grid, true));
+        }
+
+        const sunIcon = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>';
+        const moonIcon = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+
+        // ✅ FIXED: Theme toggle par koi re-render nahi hoga, isliye data waisa hi rahega
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            localStorage.setItem('theme-preference', isDark ? 'dark' : 'light');
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const iconBox = document.getElementById('theme-icon');
+            if (iconBox) {
+                iconBox.innerHTML = document.body.classList.contains('dark-theme') ? sunIcon : moonIcon;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme-preference') || 'light';
+            if (savedTheme === 'dark') document.body.classList.add('dark-theme');
+            updateThemeIcon();
+        });
+</script>
+<div id="series-modal">
+    <div class="modal-header-top">
+        <div class="title-stack">
+            <div class="series-title-row">
+                <div class="series-bullet"></div>
+                <div class="series-name-txt" id="series-title-display">Series Name</div>
+            </div>
+            <div class="series-meta-txt" id="series-meta">Genre • Year</div>
+        </div>
+        <!-- Selectable Cross Button -->
+        <div class="close-series-btn focusable" tabindex="0" onclick="closeSeries()" id="close-modal-btn">&times;</div>
+    </div>
+
+    <!-- Season Selector -->
+    <select id="season-select" onchange="changeSeason()"
+            style="width: 100%; padding: 15px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 800; margin-bottom: 20px; outline: none; font-size: 16px;">
+    </select>
+
+    <div id="episodes-list-container"></div>
+</div>
+</body>
+</html>
