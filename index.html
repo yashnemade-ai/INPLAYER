@@ -234,7 +234,7 @@
 }
 
 .card.banner-card {
-    width: 100% !important;
+    width: 90% !important;
     /* Aspect Ratio को 16/9 किया ताकि image कटे नहीं */
     aspect-ratio: 16 / 9 !important;
     position: relative !important;
@@ -539,6 +539,12 @@ body.dark-theme .ep-item {
     background: #000;
 }
 
+@media (orientation: landscape) {
+    .slide-inner {
+        aspect-ratio: 16 / 7;
+    }
+}
+
 .slide-inner img {
     width: 100%;
     height: 100%;
@@ -757,7 +763,7 @@ let startX = 0;
 function renderMovies(list) {
     area.innerHTML = "";
     // Sirf un movies ko slider mein lo jinki category khali hai
-    const sliderItems = list.filter(m => !m.cat || m.cat.trim() === "").slice(0, 5);
+    const sliderItems = list.filter(m => !m.cat || m.cat.trim() === "");
     totalSlides = sliderItems.length;
 
     if (totalSlides > 0) {
