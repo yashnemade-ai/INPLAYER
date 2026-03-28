@@ -9,7 +9,7 @@
     <style>
         /* --- GLOBAL VARIABLES & THEMES --- */
         :root {
-            --bg-color: #f2f2f7; --card-bg: #ffffff; --text-main: #000000; --text-sec: #666666; --accent: #FF3B30;
+            --bg-color: #f2f2f7; --card-bg: #ffffff; --text-main: #000000; --text-sec: #666666; --accent: #f90d00;
             --sidebar-bg: #ffffff; --nav-bg: rgba(255, 255, 255, 0.95); --border-color: rgba(0,0,0,0.15);
             --search-bg: #e5e5ea; --search-txt: #000000;
         }
@@ -32,7 +32,7 @@
         .focusable:focus, .focusable.focused {
             border: 2px solid var(--accent) !important;
             animation: borderGlow 1.5s infinite;
-            transform: scale(1.05);
+            transform: none;
             z-index: 100;
         }
 /* --- FAVORITES INDICATOR (FIXED) --- */
@@ -54,7 +54,7 @@
 .fav-indicator svg {
     width: 18px; /* Pehle 22px tha */
     height: 18px;
-    fill: #FF3B30;
+    fill: #f90d00;
 }
 
 /* --- SIDEBAR FIX (TAAKI HEART NA DIKHE) --- */
@@ -279,7 +279,7 @@
 .banner-badge {
     position: absolute;
     top: 15px; right: 15px;
-    background: #FF3B30;
+    background: #ff3b30;
     color: white;
     font-size: 10px;
     font-weight: 900;
@@ -309,7 +309,7 @@
 .card.movie-card .quality-tag {
     position: absolute !important;
     top: 10px; right: 10px;
-    background: #FF3B30 !important;
+    background: #ff3b30 !important;
     color: white !important;
     padding: 3px 8px !important;
     font-size: 10px !important;
@@ -343,7 +343,7 @@
 .card.movie-card .quality-tag {
     position: absolute !important;
     top: 10px; right: 10px;
-    background: #FF3B30 !important;
+    background: #f90d00 !important;
     color: white !important;
     padding: 3px 8px !important;
     font-size: 10px !important;
@@ -563,8 +563,22 @@ body.dark-theme .ep-item {
 .slide-title { font-size: 20px; font-weight: 800; color: white; }
 .slide-badge {
     position: absolute; top: 15px; right: 20px;
-    background: #FF3B30; color: white; font-size: 10px; font-weight: 900;
+    background: #f90d00; color: white; font-size: 10px; font-weight: 900;
     padding: 4px 12px; border-radius: 8px;
+}
+
+.slide-tag-left {
+    position: absolute;
+    bottom: 50px;   /* 🔥 yaha shift kiya */
+    left: 20px;
+
+    background: #f90d00;
+    color: white;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 5px 12px;
+    border-radius: 6px;
+    z-index: 6;
 }
 
 /* Professional Dots */
@@ -596,8 +610,8 @@ body.dark-theme .ep-item {
 }
         .card-logo { width: 70%; height: 50%; object-fit: contain; z-index: 2; pointer-events: none; }
         .card-name { font-size: 11px; margin-top: 10px; color: var(--text-sec); font-weight: 800; text-align: center; width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-        .live-tag { position: absolute; top: 8px; right: 8px; background: #FF3B30; color: white; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 800; z-index: 2; }
-        .quality-tag { position: absolute; top: 8px; right: 8px; background: ##FF3B30; color: white; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 800; z-index: 2; }
+        .live-tag { position: absolute; top: 8px; right: 8px; background: #f90d00; color: white; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 800; z-index: 2; }
+        .quality-tag { position: absolute; top: 8px; right: 8px; background: #f90d00; color: white; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 800; z-index: 2; }
 
 
 
@@ -660,7 +674,7 @@ body.dark-theme .ep-item {
 <div class="about-modal" id="about-modal">
     <div class="about-card" style="background: var(--card-bg); color: var(--text-main);">
         <div class="logo-wrapper" style="justify-content:center; margin-bottom:15px; pointer-events:none;">
-            <svg class="red-play-icon" viewBox="0 0 24 24" width="60" height="60"><path fill="#FF3B30" d="M8 5v14l11-7z"/></svg>
+            <svg class="red-play-icon" viewBox="0 0 24 24" width="60" height="60"><path fill="#f90d00" d="M8 5v14l11-7z"/></svg>
             <div style="font-size:32px; font-weight:800; color: var(--text-main);">INPLAYER <span style="color: var(--accent);">+</span></div>
         </div>
         <div style="color: var(--accent); font-size:13px; font-weight:800; margin-bottom:25px; letter-spacing:2px; text-transform: uppercase; opacity: 0.9;">Platinum Edition v8.0</div>
@@ -782,6 +796,7 @@ function renderMovies(list) {
                 <div class="slide" onclick='openPlayer(${JSON.stringify(m)})'>
                     <div class="slide-inner focusable" tabindex="0">
                         <div class="slide-badge">${qTag}</div>
+                        <div class="slide-tag-left">TRENDING NOW</div>
                         <img src="${m.logo}" onerror="this.src='https://via.placeholder.com/800x450'">
                         <div class="slide-overlay">
                             <div class="slide-title">${m.name}</div>
